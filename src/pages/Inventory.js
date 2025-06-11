@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useCallback } from "react";
 import AddProduct from "../components/AddProduct";
 import UpdateProduct from "../components/UpdateProduct";
 import AuthContext from "../AuthContext";
@@ -14,14 +14,7 @@ function Inventory() {
 
   const authContext = useContext(AuthContext);
 
-  useEffect(() => {
-    if (!authContext.user) return;
-    fetchProductsData();
-    fetchSalesData();
-  }, [authContext.user, updatePage]);
-
-  // Fetching All Products
-  const fetchProductsData = async () => {
+  const fetchProductsData = useCallback(async () => {
     try {
       const response = await fetch(
         `https://inventory-1tt5.onrender.com/api/product/get/${authContext.user}`
@@ -31,10 +24,9 @@ function Inventory() {
     } catch (err) {
       console.error("Error fetching products:", err);
     }
-  };
+  }, [authContext.user]);
 
-  // Fetching Stores Data
-  const fetchSalesData = async () => {
+  const fetchSalesData = useCallback(async () => {
     try {
       const response = await fetch(
         `https://inventory-1tt5.onrender.com/api/store/get/${authContext.user}`
@@ -44,7 +36,12 @@ function Inventory() {
     } catch (err) {
       console.error("Error fetching stores:", err);
     }
-  };
+  }, [authContext.user]);
+  useEffect(() => {
+    if (!authContext.user) return;
+    fetchProductsData();
+    fetchSalesData();
+  }, [authContext.user, updatePage, fetchProductsData, fetchSalesData]);
 
   // Fetching Search Results
   const fetchSearchData = async (query) => {
@@ -60,13 +57,21 @@ function Inventory() {
   };
 
   // Delete Item
+  // Delete Item
   const deleteItem = async (id) => {
     try {
-      await fetch(`https://inventory-1tt5.onrender.com/api/product/delete/${id}`);
+      await fetch(
+        `https://inventory-1tt5.onrender.com/api/product/delete/${id}`
+      );
       setUpdatePage((prev) => !prev);
     } catch (err) {
       console.error("Delete error:", err);
     }
+  };
+
+  // 🔧 Fix: Add this function
+  const handlePageUpdate = () => {
+    setUpdatePage((prev) => !prev);
   };
 
   // Input Change Handler (with live search)
@@ -89,49 +94,83 @@ function Inventory() {
           <div className="flex flex-col md:flex-row justify-center items-center">
             {/* Total Products */}
             <div className="flex flex-col p-10 w-full md:w-3/12">
-              <span className="font-semibold text-blue-600 text-base">Total Products</span>
-              <span className="font-semibold text-gray-600 text-base">{products.length}</span>
-              <span className="font-thin text-gray-400 text-xs">Last 7 days</span>
+              <span className="font-semibold text-blue-600 text-base">
+                Total Products
+              </span>
+              <span className="font-semibold text-gray-600 text-base">
+                {products.length}
+              </span>
+              <span className="font-thin text-gray-400 text-xs">
+                Last 7 days
+              </span>
             </div>
             {/* Stores */}
             <div className="flex flex-col gap-3 p-10 w-full md:w-3/12 sm:border-y-2 md:border-x-2 md:border-y-0">
-              <span className="font-semibold text-yellow-600 text-base">Stores</span>
+              <span className="font-semibold text-yellow-600 text-base">
+                Stores
+              </span>
               <div className="flex gap-8">
                 <div className="flex flex-col">
-                  <span className="font-semibold text-gray-600 text-base">{stores.length}</span>
-                  <span className="font-thin text-gray-400 text-xs">Last 7 days</span>
+                  <span className="font-semibold text-gray-600 text-base">
+                    {stores.length}
+                  </span>
+                  <span className="font-thin text-gray-400 text-xs">
+                    Last 7 days
+                  </span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-semibold text-gray-600 text-base">$2000</span>
-                  <span className="font-thin text-gray-400 text-xs">Revenue</span>
+                  <span className="font-semibold text-gray-600 text-base">
+                    $2000
+                  </span>
+                  <span className="font-thin text-gray-400 text-xs">
+                    Revenue
+                  </span>
                 </div>
               </div>
             </div>
             {/* Top Selling */}
             <div className="flex flex-col gap-3 p-10 w-full md:w-3/12 sm:border-y-2 md:border-x-2 md:border-y-0">
-              <span className="font-semibold text-purple-600 text-base">Top Selling</span>
+              <span className="font-semibold text-purple-600 text-base">
+                Top Selling
+              </span>
               <div className="flex gap-8">
                 <div className="flex flex-col">
-                  <span className="font-semibold text-gray-600 text-base">5</span>
-                  <span className="font-thin text-gray-400 text-xs">Last 7 days</span>
+                  <span className="font-semibold text-gray-600 text-base">
+                    5
+                  </span>
+                  <span className="font-thin text-gray-400 text-xs">
+                    Last 7 days
+                  </span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-semibold text-gray-600 text-base">$1500</span>
+                  <span className="font-semibold text-gray-600 text-base">
+                    $1500
+                  </span>
                   <span className="font-thin text-gray-400 text-xs">Cost</span>
                 </div>
               </div>
             </div>
             {/* Low Stock */}
             <div className="flex flex-col gap-3 p-10 w-full md:w-3/12 border-y-2 md:border-x-2 md:border-y-0">
-              <span className="font-semibold text-red-600 text-base">Low Stocks</span>
+              <span className="font-semibold text-red-600 text-base">
+                Low Stocks
+              </span>
               <div className="flex gap-8">
                 <div className="flex flex-col">
-                  <span className="font-semibold text-gray-600 text-base">12</span>
-                  <span className="font-thin text-gray-400 text-xs">Ordered</span>
+                  <span className="font-semibold text-gray-600 text-base">
+                    12
+                  </span>
+                  <span className="font-thin text-gray-400 text-xs">
+                    Ordered
+                  </span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-semibold text-gray-600 text-base">2</span>
-                  <span className="font-thin text-gray-400 text-xs">Not in Stock</span>
+                  <span className="font-semibold text-gray-600 text-base">
+                    2
+                  </span>
+                  <span className="font-thin text-gray-400 text-xs">
+                    Not in Stock
+                  </span>
                 </div>
               </div>
             </div>
@@ -140,7 +179,10 @@ function Inventory() {
 
         {/* Modals */}
         {showProductModal && (
-          <AddProduct addProductModalSetting={setShowProductModal} handlePageUpdate={handlePageUpdate} />
+          <AddProduct
+            addProductModalSetting={setShowProductModal}
+            handlePageUpdate={handlePageUpdate}
+          />
         )}
         {showUpdateModal && (
           <UpdateProduct
@@ -179,8 +221,18 @@ function Inventory() {
           <table className="min-w-full divide-y-2 divide-gray-200 text-sm">
             <thead>
               <tr>
-                {["Products", "Manufacturer", "Stock", "Description", "Availibility", "More"].map((head) => (
-                  <th key={head} className="whitespace-nowrap px-4 py-2 text-left font-medium text-gray-900">
+                {[
+                  "Products",
+                  "Manufacturer",
+                  "Stock",
+                  "Description",
+                  "Availibility",
+                  "More",
+                ].map((head) => (
+                  <th
+                    key={head}
+                    className="whitespace-nowrap px-4 py-2 text-left font-medium text-gray-900"
+                  >
                     {head}
                   </th>
                 ))}
@@ -189,10 +241,18 @@ function Inventory() {
             <tbody className="divide-y divide-gray-200">
               {products.map((element) => (
                 <tr key={element._id}>
-                  <td className="whitespace-nowrap px-4 py-2 text-gray-900">{element.name}</td>
-                  <td className="whitespace-nowrap px-4 py-2 text-gray-700">{element.manufacturer}</td>
-                  <td className="whitespace-nowrap px-4 py-2 text-gray-700">{element.stock}</td>
-                  <td className="whitespace-nowrap px-4 py-2 text-gray-700">{element.description}</td>
+                  <td className="whitespace-nowrap px-4 py-2 text-gray-900">
+                    {element.name}
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-2 text-gray-700">
+                    {element.manufacturer}
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-2 text-gray-700">
+                    {element.stock}
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-2 text-gray-700">
+                    {element.description}
+                  </td>
                   <td className="whitespace-nowrap px-4 py-2 text-gray-700">
                     {element.stock > 0 ? "In Stock" : "Not in Stock"}
                   </td>
