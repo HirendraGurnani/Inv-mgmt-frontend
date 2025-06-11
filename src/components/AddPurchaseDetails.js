@@ -27,7 +27,7 @@ export default function AddPurchaseDetails({
 
   // POST Data
   const addSale = () => {
-    fetch("https://inventory-1tt5.onrender.com/api/purchase/add", {
+    fetch("http://localhost:4000/api/purchase/add", {
       method: "POST",
       headers: {
         "Content-type": "application/json",

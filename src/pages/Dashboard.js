@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState, useCallback } from "react";
 import Chart from "react-apexcharts";
 import AuthContext from "../AuthContext";
 import { Doughnut } from "react-chartjs-2";
@@ -69,19 +69,58 @@ function Dashboard() {
   });
 
   // Update Chart Data
-  const updateChartData = (salesData) => {
-    setChart({
-      ...chart,
+  const updateChartData = useCallback((salesData) => {
+    setChart((prevChart) => ({
+      ...prevChart,
       series: [
         {
           name: "Monthly Sales Amount",
           data: [...salesData],
         },
       ],
-    });
-  };
+    }));
+  }, []);
 
   const authContext = useContext(AuthContext);
+  const fetchTotalSaleAmount = useCallback(() => {
+    fetch(
+      `https://inventory-1tt5.onrender.com/api/sales/get/${authContext.user}/totalsaleamount`
+    )
+      .then((response) => response.json())
+      .then((datas) => setSaleAmount(datas.totalSaleAmount));
+  }, [authContext.user]);
+
+  const fetchTotalPurchaseAmount = useCallback(() => {
+    fetch(
+      `https://inventory-1tt5.onrender.com/api/purchase/get/${authContext.user}/totalpurchaseamount`
+    )
+      .then((response) => response.json())
+      .then((datas) => setPurchaseAmount(datas.totalPurchaseAmount));
+  }, [authContext.user]);
+
+  const fetchStoresData = useCallback(() => {
+    fetch(
+      `https://inventory-1tt5.onrender.com/api/store/get/${authContext.user}`
+    )
+      .then((response) => response.json())
+      .then((datas) => setStores(datas));
+  }, [authContext.user]);
+
+  const fetchProductsData = useCallback(() => {
+    fetch(
+      `https://inventory-1tt5.onrender.com/api/product/get/${authContext.user}`
+    )
+      .then((response) => response.json())
+      .then((datas) => setProducts(datas))
+      .catch((err) => console.log(err));
+  }, [authContext.user]);
+
+  const fetchMonthlySalesData = useCallback(() => {
+    fetch(`https://inventory-1tt5.onrender.com/api/sales/getmonthly`)
+      .then((response) => response.json())
+      .then((datas) => updateChartData(datas.salesAmount))
+      .catch((err) => console.log(err));
+  }, [updateChartData]);
 
   useEffect(() => {
     fetchTotalSaleAmount();
@@ -89,48 +128,13 @@ function Dashboard() {
     fetchStoresData();
     fetchProductsData();
     fetchMonthlySalesData();
-  }, []);
-
-  // Fetching total sales amount
-  const fetchTotalSaleAmount = () => {
-    fetch(
-      `https://inventory-1tt5.onrender.com/api/sales/get/${authContext.user}/totalsaleamount`
-    )
-      .then((response) => response.json())
-      .then((datas) => setSaleAmount(datas.totalSaleAmount));
-  };
-
-  // Fetching total purchase amount
-  const fetchTotalPurchaseAmount = () => {
-    fetch(
-      `https://inventory-1tt5.onrender.com/api/purchase/get/${authContext.user}/totalpurchaseamount`
-    )
-      .then((response) => response.json())
-      .then((datas) => setPurchaseAmount(datas.totalPurchaseAmount));
-  };
-
-  // Fetching all stores data
-  const fetchStoresData = () => {
-    fetch(`https://inventory-1tt5.onrender.com/api/store/get/${authContext.user}`)
-      .then((response) => response.json())
-      .then((datas) => setStores(datas));
-  };
-
-  // Fetching Data of All Products
-  const fetchProductsData = () => {
-    fetch(`https://inventory-1tt5.onrender.com/api/product/get/${authContext.user}`)
-      .then((response) => response.json())
-      .then((datas) => setProducts(datas))
-      .catch((err) => console.log(err));
-  };
-
-  // Fetching Monthly Sales
-  const fetchMonthlySalesData = () => {
-    fetch(`https://inventory-1tt5.onrender.com/api/sales/getmonthly`)
-      .then((response) => response.json())
-      .then((datas) => updateChartData(datas.salesAmount))
-      .catch((err) => console.log(err));
-  };
+  }, [
+    fetchTotalSaleAmount,
+    fetchTotalPurchaseAmount,
+    fetchStoresData,
+    fetchProductsData,
+    fetchMonthlySalesData,
+  ]);
 
   return (
     <>
